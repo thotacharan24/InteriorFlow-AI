@@ -1,0 +1,12 @@
+{
+  "name": "InteriorFlow lead capture and qualification",
+  "nodes": [
+    {"parameters":{"httpMethod":"POST","path":"interiorflow-lead","responseMode":"onReceived","options":{}},"id":"webhook1","name":"Lead Webhook","type":"n8n-nodes-base.webhook","typeVersion":2,"position":[0,0],"webhookId":"interiorflow-lead"},
+    {"parameters":{"jsCode":"const d=$json;\nif(!d.name||!d.email||!d.budget||!d.timeline||!d.location||!d.property) throw new Error('Missing required lead fields');\nreturn [{json:{name:String(d.name).trim(),email:String(d.email).trim().toLowerCase(),phone:d.phone||'',budget:Number(d.budget),timeline:Number(d.timeline),location:String(d.location).trim(),property:String(d.property),requirements:d.requirements||'',lead_source:d.lead_source||'n8n webhook',consent:d.consent===true}}];"},"id":"validate1","name":"Validate enquiry","type":"n8n-nodes-base.code","typeVersion":2,"position":[220,0]},
+    {"parameters":{"method":"POST","url":"http://127.0.0.1:5000/api/leads","sendBody":true,"specifyBody":"json","jsonBody":"={{ JSON.stringify($json) }}","options":{"timeout":20000}},"id":"save1","name":"Save and qualify lead","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[440,0]},
+    {"parameters":{"respondWith":"json","responseBody":"={{ JSON.stringify({received:true,leadId:$json.id,score:$json.score,classification:$json.classification}) }}","options":{}},"id":"respond1","name":"Return result","type":"n8n-nodes-base.respondToWebhook","typeVersion":1.1,"position":[660,0]}
+  ],
+  "connections":{"Lead Webhook":{"main":[[{"node":"Validate enquiry","type":"main","index":0}]]},"Validate enquiry":{"main":[[{"node":"Save and qualify lead","type":"main","index":0}]]},"Save and qualify lead":{"main":[[{"node":"Return result","type":"main","index":0}]]}},
+  "settings":{"executionOrder":"v1"},
+  "active":false
+}

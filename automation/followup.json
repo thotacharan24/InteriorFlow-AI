@@ -1,0 +1,12 @@
+{
+  "name": "InteriorFlow scheduled follow-up",
+  "nodes":[
+    {"parameters":{"rule":{"interval":[{"field":"hours","hoursInterval":24}]}},"id":"schedule1","name":"Daily schedule","type":"n8n-nodes-base.scheduleTrigger","typeVersion":1.2,"position":[0,0]},
+    {"parameters":{"method":"GET","url":"http://127.0.0.1:5000/api/state","sendHeaders":true,"headerParameters":{"parameters":[{"name":"X-InteriorFlow-Key","value":"={{ $env.N8N_API_KEY }}"}]},"options":{"timeout":20000}},"id":"state1","name":"Retrieve follow-ups","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[220,0]},
+    {"parameters":{"jsCode":"const today=new Date().toISOString().slice(0,10);\nreturn ($json.followups||[]).filter(x=>x.status==='Pending'&&x.due<=today).map(x=>({json:x}));"},"id":"filter1","name":"Select due follow-ups","type":"n8n-nodes-base.code","typeVersion":2,"position":[440,0]},
+    {"parameters":{"method":"POST","url":"http://127.0.0.1:5000/api/followups/{{ $json.id }}/complete","sendBody":false,"sendHeaders":true,"headerParameters":{"parameters":[{"name":"X-InteriorFlow-Key","value":"={{ $env.N8N_API_KEY }}"}]},"options":{"timeout":20000}},"id":"complete1","name":"Save draft result","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[660,0]}
+  ],
+  "connections":{"Daily schedule":{"main":[[{"node":"Retrieve follow-ups","type":"main","index":0}]]},"Retrieve follow-ups":{"main":[[{"node":"Select due follow-ups","type":"main","index":0}]]},"Select due follow-ups":{"main":[[{"node":"Save draft result","type":"main","index":0}]]}},
+  "settings":{"executionOrder":"v1","retryOnFail":true,"maxRetries":2},
+  "active":false
+}
